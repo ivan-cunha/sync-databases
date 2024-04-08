@@ -36,8 +36,8 @@ services:
     image: postgres:16.2-bookworm
     environment:
       
-      POSTGRES_PASSWORD: source_password
-      POSTGRES_USER: source_user
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
       POSTGRES_DB: source_db
       POSTGRESQL_WAL_LEVEL: logical
     ports:
@@ -51,11 +51,11 @@ services:
     image: postgres:16.2-bookworm
     environment:
       
-      POSTGRES_PASSWORD: sink_password
-      POSTGRES_USER: sink_user
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
       POSTGRES_DB: sink_db
     ports:
-      - 5433:5433
+      - 5433:5432
     volumes:
       - sink-postgres-data:/var/lib/postgresql/data
     networks:
@@ -70,15 +70,6 @@ services:
       STATUS_STORAGE_TOPIC: my_connect_statuses
       BOOTSTRAP_SERVERS: kafka:9092
       CLASSLOADER_CACHE_ENABLED: "false"
-    networks:
-      - backend
-
-  debezium-ui:
-    image: debezium/debezium-ui:2.5
-    environment:
-      KAFKA_CONNECT_URIS: http://kafka-connect:8083
-    ports:
-      - 8080:8080
     networks:
       - backend
 
