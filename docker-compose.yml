@@ -1,0 +1,90 @@
+version: '3.9'
+services:
+  kafka:
+    image: debezium/kafka:2.6.0.Final
+    environment:     
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT'
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: 'localhost'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
+      KAFKA_LISTENERS: 'INTERNAL://:9092,CONTROLLER://:29094'
+      KAFKA_ADVERTISED_LISTENERS: 'INTERNAL://kafka:9092'
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29094'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - backend
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.1
+    environment:
+        
+        KAFKA_CLUSTERS_0_NAME: local
+        KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+        DYNAMIC_CONFIG_ENABLED: "true"
+    networks:
+      - backend
+    ports:
+      - 8081:8080
+
+  source-postgres:
+    image: postgres:16.2-bookworm
+    environment:
+      
+      POSTGRES_PASSWORD: source_password
+      POSTGRES_USER: source_user
+      POSTGRES_DB: source_db
+      POSTGRESQL_WAL_LEVEL: logical
+    ports:
+      - 5432:5432
+    volumes:
+      - source-postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  sink-postgres:
+    image: postgres:16.2-bookworm
+    environment:
+      
+      POSTGRES_PASSWORD: sink_password
+      POSTGRES_USER: sink_user
+      POSTGRES_DB: sink_db
+    ports:
+      - 5433:5433
+    volumes:
+      - sink-postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  kafka-connect:
+    image: debezium/connect:2.6.0.Final
+    environment:   
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: my_connect_configs
+      OFFSET_STORAGE_TOPIC: my_connect_offsets
+      STATUS_STORAGE_TOPIC: my_connect_statuses
+      BOOTSTRAP_SERVERS: kafka:9092
+      CLASSLOADER_CACHE_ENABLED: "false"
+    networks:
+      - backend
+
+  debezium-ui:
+    image: debezium/debezium-ui:2.5
+    environment:
+      KAFKA_CONNECT_URIS: http://kafka-connect:8083
+    ports:
+      - 8080:8080
+    networks:
+      - backend
+
+volumes:
+  source-postgres-data: {}
+  sink-postgres-data: {}
+  kafka-data: {}
+networks:
+  backend:
