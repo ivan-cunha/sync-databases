@@ -10,6 +10,11 @@
         "database.dbname": "source_db",
         "database.server.name": "postgres",
         "schema.include.list": "public",
-        "snapshot.mode": "always"
+        "snapshot.mode": "always",
+        "topic.prefix": "source_db",
+        "transforms": "Reroute",
+        "transforms.Reroute.type": "io.debezium.transforms.ByLogicalTableRouter",
+        "transforms.Reroute.topic.regex": "source_db.public.(.*)",
+        "transforms.Reroute.topic.replacement": "sink.$1"
     }
 }
